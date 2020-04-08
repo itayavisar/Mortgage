@@ -4,7 +4,7 @@ from bokeh.io import output_file, output_notebook
 from bokeh.plotting import figure, show, Row
 from bokeh.io import curdoc
 from bokeh.layouts import column, row, widgetbox
-from bokeh.models import ColumnDataSource, Slider, TextInput, Paragraph, Text, RadioGroup, Button, CheckboxGroup
+from bokeh.models import ColumnDataSource, Slider, TextInput, Paragraph, Text, RadioGroup, Button, CheckboxGroup, Spacer
 import time
 import datetime
 import numpy as np
@@ -46,12 +46,12 @@ class Maslul:
                      name='show_monthly_payment')
         self.fig2.add_glyph(self.source_text_monthly_ret, glyph)
 
-    # def __add__(self, other):
-    #     for i in range(0, self.shita.months):
-    #         self.shita.loan_left[i] += other.shita.loan_left[i]
-    #         self.shita.monthly_ret[i] += other.shita.monthly_ret[i]
-    #         self.shita.monthly_fee[i] += self.shita.monthly_fee[i]
-    #         self.shita.monthly_total[i] += self.shita.monthly_total[i]
+    def __add__(self, other):
+        for i in range(0, self.shita.months):
+            self.shita.loan_left[i] += other.shita.loan_left[i]
+            self.shita.monthly_ret[i] += other.shita.monthly_ret[i]
+            self.shita.monthly_fee[i] += self.shita.monthly_fee[i]
+            self.shita.monthly_total[i] += self.shita.monthly_total[i]
 
 
     def update(self, loan, months, ribit, madad):
@@ -101,18 +101,18 @@ class figure_factory:
              border_fill_alpha=0.25,
              plot_height=300,
              plot_width=400,
-             x_axis_label='X Label',
+             x_axis_label='months',
              x_axis_type='linear',
              x_axis_location='below',
              x_range=(0, 360),
-             y_axis_label='Y Label',
+             y_axis_label='payment',
              y_axis_type='linear',
              y_axis_location='left',
              y_range=(0, 4500),
              title='monthly return Figure',
              title_location='right',
              toolbar_location='below',
-             tools='save')
+             tools=["hover","pan","box_zoom","wheel_zoom","reset"])
         elif figure_type == self.figures_types[1]:
             return figure(background_fill_color='gray',
                    background_fill_alpha=0.5,
@@ -120,18 +120,18 @@ class figure_factory:
                    border_fill_alpha=0.25,
                    plot_height=300,
                    plot_width=400,
-                   x_axis_label='X Label',
+                   x_axis_label='months',
                    x_axis_type='linear',
                    x_axis_location='below',
                    x_range=(0, 360),
-                   y_axis_label='Y Label',
+                   y_axis_label='left loan',
                    y_axis_type='linear',
                    y_axis_location='left',
                    y_range=(0, 450000),
-                   title='Example Figure',
+                   title='loan left Figure',
                    title_location='right',
                    toolbar_location='below',
-                   tools='save')
+                   tools=["hover","pan","box_zoom","wheel_zoom","reset"])
         else:
             raise KeyError("ERROR figure_factory: [get_figture] no such figure_type {}. please choose one of {}".format(figure_type,self.figures_types))
 
@@ -168,23 +168,6 @@ mish_krn = Maslul("keren_shava", loan, months=krn_months, ribit=ribit, madad=106
 mish_shp.update(loan=loan, months=shp_months, ribit=ribit, madad=106.7)
 mish_krn.update(loan=loan, months=krn_months, ribit=ribit, madad=106.7)
 
-## TOTAL
-# fig_total1 = figure_factory().get_figture("left loan")
-# fig_total2 = figure_factory().get_figture("monthly payment")
-# figures_total = [fig_total1, fig_total2]
-#
-# total_shp = Maslul("shpitzer", loan, months=shp_months, ribit=ribit, madad=106.7, figures=figures_kltz)
-# total_shp.__add__(kalatz_shp)
-# total_shp.__add__(prime_shp)
-# total_shp.__add__(mish_shp)
-#
-# total_krn = Maslul("keren_shava", loan, months=shp_months, ribit=ribit, madad=106.7, figures=figures_kltz)
-# total_krn.__add__(kalatz_krn)
-# total_krn.__add__(prime_krn)
-# total_krn.__add__(mish_krn)
-#
-# total_shp.update(loan=total_shp.shita.loan, months=total_shp.months, ribit=total_shp.ribit, madad=106.7)
-# total_krn.update(loan=total_krn.shita.loan, months=total_krn.months, ribit=total_krn.ribit, madad=106.7)
 
 class MaslusSliders:
     def __init__(self, function):
@@ -205,29 +188,24 @@ class MaslusSliders:
               self.shp_years_slider)
 
 
-total_monthly_sum = [kalatz_krn.shita.get_monthly_total()[0] + prime_krn.shita.get_monthly_total()[0] + mish_krn.shita.get_monthly_total()[0]]
-source_total_monthly_sum = ColumnDataSource(dict(x=[100], y=[100], text=total_monthly_sum))
-glyph = Text(x="x", y="y", text="text", angle=0.0, text_color="red", name='source_total_monthly_sum')
+total_monthly_sum = [kalatz_shp.shita.get_monthly_total()[0] + prime_shp.shita.get_monthly_total()[0] + mish_shp.shita.get_monthly_total()[0]]
+source_total_monthly_sum = ColumnDataSource(dict(x=[0], y=[0], text=["Shpitzer total: " + str(total_monthly_sum[0])]))
+glyph = Text(x=100, y=50, text="text", angle=0.0, text_color="red", name='source_total_monthly_sum')
 tota_fig = figure(background_fill_color='white',
                    background_fill_alpha=0.5,
-                   border_fill_color="black",
+                   border_fill_color=None,
                    border_fill_alpha=0.25,
                    plot_height=100,
-                   plot_width=200,
-                   # x_axis_label='X Label',
-                   # x_axis_type='linear',
-                   # x_axis_location='below',
-                   # x_range=(0, 360),
-                   # y_axis_label='Y Label',
-                   # y_axis_type='linear',
-                   # y_axis_location='left',
-                   # y_range=(0, 450000),
+                   plot_width=400,
                    title='total',
-                   title_location='right',
-                   # toolbar_location='below',
-                   tools="save")
+                   title_location=None
+                   )
+tota_fig.axis.visible = False
+tota_fig.toolbar.logo = None
+tota_fig.toolbar_location = None
+tota_fig.xgrid.grid_line_color = None
+tota_fig.ygrid.grid_line_color = None
 tota_fig.add_glyph(source_total_monthly_sum, glyph)
-
 
 def update_data_kltz(attrname, old, new):
     # Get the current slider values
@@ -242,16 +220,8 @@ def update_data_kltz(attrname, old, new):
 
     total_monthly_sum = [kalatz_shp.shita.get_monthly_total()[0] + prime_shp.shita.get_monthly_total()[0] +
                          mish_shp.shita.get_monthly_total()[0]]
-    source_total_monthly_sum.data = dict(x=[100], y=[100], text=total_monthly_sum)
+    source_total_monthly_sum.data = dict(x=[0], y=[0], text=["total: " + str(total_monthly_sum[0])])
 
-    # firt_payment_text = Paragraph(text=kalatz_shp.shita.get_monthly_total()[0], width=200, height=100) TODO ITAY show value of payments
-
-    ## print table
-    # print("========================================================================================================================================================================================================================")
-    # print("========================================================================================================================================================================================================================")
-    # kalatz_shp.shita.print_params()
-    # print("========================================================================================================================================================================================================================")
-    # kalatz_krn.shita.print_params()
 
 def update_data_prime(attrname, old, new):
     # Get the current slider values
@@ -267,12 +237,6 @@ def update_data_prime(attrname, old, new):
     total_monthly_sum = [kalatz_shp.shita.get_monthly_total()[0] + prime_shp.shita.get_monthly_total()[0] +
                          mish_shp.shita.get_monthly_total()[0]]
     source_total_monthly_sum.data = dict(x=[100], y=[100], text=total_monthly_sum)
-    ## print table
-    # print("========================================================================================================================================================================================================================")
-    # print("========================================================================================================================================================================================================================")
-    # kalatz_shp.shita.print_params()
-    # print("========================================================================================================================================================================================================================")
-    # kalatz_krn.shita.print_params()
 
 
 def update_data_mish(attrname, old, new):
@@ -299,6 +263,9 @@ kltz_inputs = kltz_sliders.get_sliders()
 prime_inputs = prime_sliders.get_sliders()
 mish_inputs = mish_sliders.get_sliders()
 
+# button = Button(label="Foo", button_type="success")
+# button = widgetbox(children=[glyph])
+# curdoc().add_root(column(row(kltz_inputs), row(fig_kltz1,button, fig_kltz2, width=800)))
 curdoc().add_root(column(row(kltz_inputs, tota_fig), row(fig_kltz1, fig_kltz2, width=800)))
 curdoc().add_root(column(prime_inputs, row(fig_prime1, fig_prime2, width=800)))
 curdoc().add_root(column(mish_inputs, row(fig_mish1, fig_mish2, width=800)))
