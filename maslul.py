@@ -4,7 +4,7 @@ from bokeh.io import output_file, output_notebook
 from bokeh.plotting import figure, show, Row
 from bokeh.io import curdoc
 from bokeh.layouts import column, row, widgetbox
-from bokeh.models import ColumnDataSource, Slider, TextInput, Paragraph, Text, RadioGroup, Button, CheckboxGroup, Spacer
+from bokeh.models import ColumnDataSource, Slider, CustomJS, TextInput, Paragraph, Text, RadioGroup, Button, CheckboxGroup, Spacer
 import time
 import datetime
 import numpy as np
@@ -170,7 +170,7 @@ mish_krn.update(loan=loan, months=krn_months, ribit=ribit, madad=106.7)
 
 
 class MaslusSliders:
-    def __init__(self, function):
+    def __init__(self):
         # configure Sliders
         self.ribit_slider = Slider(title="ribit", value=ribit, start=0.0, end=5.0, step=0.01)
         self.ks_years_slider = Slider(title="keren shava years", value=20.0, start=1.0, end=30.0, step=1)
@@ -178,14 +178,16 @@ class MaslusSliders:
         self.loan_slider = Slider(title="loan", value=400000.0, start=0.0, end=700000.0, step=1000)
         self.loan_slider.width = 700
 
+    def get_sliders(self):
+        return column(self.loan_slider, self.ribit_slider, self.ks_years_slider,
+              self.shp_years_slider)
+
+    def update_on_change_callbaks(self, function):
         self.ribit_slider.on_change('value', function)
         self.ks_years_slider.on_change('value', function)
         self.shp_years_slider.on_change('value', function)
         self.loan_slider.on_change('value', function)
 
-    def get_sliders(self):
-        return column(self.loan_slider, self.ribit_slider, self.ks_years_slider,
-              self.shp_years_slider)
 
 
 total_monthly_sum = [kalatz_shp.shita.get_monthly_total()[0] + prime_shp.shita.get_monthly_total()[0] + mish_shp.shita.get_monthly_total()[0]]
@@ -208,6 +210,7 @@ tota_fig.ygrid.grid_line_color = None
 tota_fig.add_glyph(source_total_monthly_sum, glyph)
 
 def update_data_kltz(attrname, old, new):
+    print("ITAY args are attrname, old, new = ",attrname, old, new)
     # Get the current slider values
     r = kltz_sliders.ribit_slider.value
     ks_y = kltz_sliders.ks_years_slider.value
@@ -224,6 +227,7 @@ def update_data_kltz(attrname, old, new):
 
 
 def update_data_prime(attrname, old, new):
+    print("ITAY args are attrname, old, new = ", attrname, old, new)
     # Get the current slider values
     r = prime_sliders.ribit_slider.value
     ks_y = prime_sliders.ks_years_slider.value
@@ -240,6 +244,7 @@ def update_data_prime(attrname, old, new):
 
 
 def update_data_mish(attrname, old, new):
+    print("ITAY args are attrname, old, new = ", attrname, old, new)
     # Get the current slider values
     r = mish_sliders.ribit_slider.value
     ks_y = mish_sliders.ks_years_slider.value
@@ -255,6 +260,39 @@ def update_data_mish(attrname, old, new):
     source_total_monthly_sum.data = dict(x=[100], y=[100], text=total_monthly_sum)
 
 
+class MaslulGraphic:
+    def __init__(self):
+        # self.maslul_id = maslul_id
+        fig1 = figure_factory().get_figture("left loan")
+        fig2 = figure_factory().get_figture("monthly payment")
+        self.figures = [fig1, fig2]
+        self.m_shp = Maslul("shpitzer", loan, months=shp_months, ribit=ribit, madad=106.7, figures=self.figures)
+        self.m_krn = Maslul("keren_shava", loan, months=shp_months, ribit=ribit, madad=106.7, figures=self.figures)
+
+
+        self.m_shp.update(loan=loan, months=shp_months, ribit=ribit, madad=106.7)
+        self.m_krn.update(loan=loan, months=krn_months, ribit=ribit, madad=106.7)
+
+        self.m_sliders = MaslusSliders()
+
+        def _update_data_handler(attrname, old, new):
+            # Get the current slider values
+            r = self.m_sliders.ribit_slider.value
+            ks_y = self.m_sliders.ks_years_slider.value
+            shp_y = self.m_sliders.shp_years_slider.value
+            loan_val = self.m_sliders.loan_slider.value
+
+            # Generate the new curve
+            self.m_shp.update(loan=loan_val, months=(shp_y * 12), ribit=r, madad=106.7)
+            self.m_krn.update(loan=loan_val, months=(ks_y * 12), ribit=r, madad=106.7)
+
+            # total_monthly_sum = [kalatz_shp.shita.get_monthly_total()[0] + prime_shp.shita.get_monthly_total()[0] +
+            #                      mish_shp.shita.get_monthly_total()[0]]
+            # source_total_monthly_sum.data = dict(x=[100], y=[100], text=total_monthly_sum)
+
+        self.m_sliders.update_on_change_callbaks(_update_data_handler)
+
+'''
 kltz_sliders = MaslusSliders(update_data_kltz)
 prime_sliders = MaslusSliders(update_data_prime)
 mish_sliders = MaslusSliders(update_data_mish)
@@ -262,11 +300,15 @@ mish_sliders = MaslusSliders(update_data_mish)
 kltz_inputs = kltz_sliders.get_sliders()
 prime_inputs = prime_sliders.get_sliders()
 mish_inputs = mish_sliders.get_sliders()
+'''
+masluls = []
+maslul_id = 0
+def add_maslul_handler():
+    masluls.append(MaslulGraphic())
+    m = masluls[-1]
+    curdoc().add_root(column(m.m_sliders.get_sliders(), row(m.figures[0], m.figures[1], width=800)))
 
-# button = Button(label="Foo", button_type="success")
-# button = widgetbox(children=[glyph])
-# curdoc().add_root(column(row(kltz_inputs), row(fig_kltz1,button, fig_kltz2, width=800)))
-curdoc().add_root(column(row(kltz_inputs, tota_fig), row(fig_kltz1, fig_kltz2, width=800)))
-curdoc().add_root(column(prime_inputs, row(fig_prime1, fig_prime2, width=800)))
-curdoc().add_root(column(mish_inputs, row(fig_mish1, fig_mish2, width=800)))
+add_maslul_button = Button(label="add maslul", button_type="success")
+add_maslul_button.on_click(add_maslul_handler)
 
+curdoc().add_root(column(add_maslul_button))
