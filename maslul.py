@@ -17,24 +17,48 @@ shp_months = 12 * shp_year
 masluls = []
 
 ## total sum data ##
-total_monthly_sum = [0]
-source_total_monthly_sum = ColumnDataSource(dict(x=[0], y=[0], text=["Shpitzer total: " + str(total_monthly_sum[0])]))
-glyph = Text(x=100, y=50, text="text", angle=0.0, text_color="red", name='source_total_monthly_sum')
-total_fig = figure(background_fill_color='white',
+total_monthly_sum_shp = [0]
+total_monthly_sum_krn = [0]
+source_total_monthly_sum_shp = ColumnDataSource(dict(x=[0], y=[0], text=["Shpitzer total: " + str(total_monthly_sum_shp[0])]))
+source_total_monthly_sum_krn = ColumnDataSource(dict(x=[0], y=[0], text=["keren shava total: " + str(total_monthly_sum_krn[0])]))
+glyph_shp = Text(x=0, y=50, text="text", angle=0.0, text_color="blue", name='source_total_monthly_sum_shp')
+glyph_krn = Text(x=0, y=50, text="text", angle=0.0, text_color="green", name='source_total_monthly_sum_krn')
+
+glyph_shp.text_font_size = '11pt'
+glyph_krn.text_font_size = '11pt'
+
+total_fig_shp = figure(background_fill_color='white',
                    background_fill_alpha=0.5,
                    border_fill_color=None,
                    border_fill_alpha=0.25,
-                   plot_height=100,
+                   plot_height=50,
                    plot_width=400,
                    title='total',
                    title_location=None
                    )
-total_fig.axis.visible = False
-total_fig.toolbar.logo = None
-total_fig.toolbar_location = None
-total_fig.xgrid.grid_line_color = None
-total_fig.ygrid.grid_line_color = None
-total_fig.add_glyph(source_total_monthly_sum, glyph)
+
+total_fig_krn = figure(background_fill_color='white',
+                   background_fill_alpha=0.5,
+                   border_fill_color=None,
+                   border_fill_alpha=0.25,
+                   plot_height=50,
+                   plot_width=400,
+                   title='total',
+                   title_location=None
+                   )
+total_fig_shp.axis.visible = False
+total_fig_shp.toolbar.logo = None
+total_fig_shp.toolbar_location = None
+total_fig_shp.xgrid.grid_line_color = None
+total_fig_shp.ygrid.grid_line_color = None
+total_fig_shp.add_glyph(source_total_monthly_sum_shp, glyph_shp)
+
+total_fig_krn.axis.visible = False
+total_fig_krn.toolbar.logo = None
+total_fig_krn.toolbar_location = None
+total_fig_krn.xgrid.grid_line_color = None
+total_fig_krn.ygrid.grid_line_color = None
+total_fig_krn.add_glyph(source_total_monthly_sum_krn, glyph_krn)
 
 
 class Maslul:
@@ -196,10 +220,13 @@ class MaslulGraphic:
             self.m_shp.update(loan=loan_val, months=(shp_y * 12), ribit=r, madad=106.7)
             self.m_krn.update(loan=loan_val, months=(ks_y * 12), ribit=r, madad=106.7)
 
-            total_monthly_sum = [0]
+            total_monthly_sum_shp = [0]
+            total_monthly_sum_krn = [0]
             for m in masluls:
-                total_monthly_sum[0] += m.m_shp.shita.get_monthly_total()[0]
-            source_total_monthly_sum.data = dict(x=[100], y=[100], text=total_monthly_sum)
+                total_monthly_sum_shp[0] += m.m_shp.shita.get_monthly_total()[0]
+                total_monthly_sum_krn[0] += m.m_krn.shita.get_monthly_total()[0]
+            source_total_monthly_sum_shp.data = dict(x=[100], y=[100], text=["Shpitzer total: " + str(round(total_monthly_sum_shp[0], 2))])
+            source_total_monthly_sum_krn.data = dict(x=[100], y=[100], text=["keren shava total: " + str(round(total_monthly_sum_krn[0], 2))])
 
         self.m_sliders.update_on_change_callbaks(_update_data_handler)
 
@@ -214,5 +241,5 @@ def add_maslul_handler():
 add_maslul_button = Button(label="add maslul +", button_type="success")
 add_maslul_button.on_click(add_maslul_handler)
 
-curdoc().add_root(column(total_fig))
+curdoc().add_root(column(row(total_fig_shp, total_fig_krn)))
 curdoc().add_root(column(add_maslul_button))
