@@ -1,13 +1,9 @@
 import keren_shava as ks
 import shpitzer as shp
-from bokeh.io import output_file, output_notebook
-from bokeh.plotting import figure, show, Row
+from bokeh.plotting import figure
 from bokeh.io import curdoc
-from bokeh.layouts import column, row, widgetbox
-from bokeh.models import ColumnDataSource, Slider, CustomJS, TextInput, Paragraph, Text, RadioGroup, Button, CheckboxGroup, Spacer
-import time
-import datetime
-import numpy as np
+from bokeh.layouts import column, row
+from bokeh.models import ColumnDataSource, Slider, Text, Button
 
 class Maslul:
     def __init__(self, shita, loan, months, ribit, madad, figures):
@@ -79,12 +75,12 @@ class Maslul:
         # glyph = Text(x="x", y="y", text="text", angle=0.0, text_color=self.shita.color)
         # self.fig2.add_glyph(self.source_text_monthly_ret, glyph)
 
-loan = 401000
+loan = 0
 
-ribit = 4.32
+ribit = 0.001
 
-krn_year = 20
-shp_year = 20
+krn_year = 1
+shp_year = 1
 krn_months = 12 * krn_year
 shp_months = 12 * shp_year
 
@@ -173,9 +169,9 @@ class MaslusSliders:
     def __init__(self):
         # configure Sliders
         self.ribit_slider = Slider(title="ribit", value=ribit, start=0.0, end=5.0, step=0.01)
-        self.ks_years_slider = Slider(title="keren shava years", value=20.0, start=1.0, end=30.0, step=1)
-        self.shp_years_slider = Slider(title="shpitzer years", value=20.0, start=1.0, end=30.0, step=1)
-        self.loan_slider = Slider(title="loan", value=400000.0, start=0.0, end=700000.0, step=1000)
+        self.ks_years_slider = Slider(title="keren shava years", value=00.0, start=1.0, end=30.0, step=1)
+        self.shp_years_slider = Slider(title="shpitzer years", value=00.0, start=1.0, end=30.0, step=1)
+        self.loan_slider = Slider(title="loan", value=000000.0, start=0.0, end=700000.0, step=1000)
         self.loan_slider.width = 700
 
     def get_sliders(self):
@@ -193,7 +189,7 @@ class MaslusSliders:
 total_monthly_sum = [kalatz_shp.shita.get_monthly_total()[0] + prime_shp.shita.get_monthly_total()[0] + mish_shp.shita.get_monthly_total()[0]]
 source_total_monthly_sum = ColumnDataSource(dict(x=[0], y=[0], text=["Shpitzer total: " + str(total_monthly_sum[0])]))
 glyph = Text(x=100, y=50, text="text", angle=0.0, text_color="red", name='source_total_monthly_sum')
-tota_fig = figure(background_fill_color='white',
+total_fig = figure(background_fill_color='white',
                    background_fill_alpha=0.5,
                    border_fill_color=None,
                    border_fill_alpha=0.25,
@@ -202,12 +198,12 @@ tota_fig = figure(background_fill_color='white',
                    title='total',
                    title_location=None
                    )
-tota_fig.axis.visible = False
-tota_fig.toolbar.logo = None
-tota_fig.toolbar_location = None
-tota_fig.xgrid.grid_line_color = None
-tota_fig.ygrid.grid_line_color = None
-tota_fig.add_glyph(source_total_monthly_sum, glyph)
+total_fig.axis.visible = False
+total_fig.toolbar.logo = None
+total_fig.toolbar_location = None
+total_fig.xgrid.grid_line_color = None
+total_fig.ygrid.grid_line_color = None
+total_fig.add_glyph(source_total_monthly_sum, glyph)
 
 def update_data_kltz(attrname, old, new):
     print("ITAY args are attrname, old, new = ",attrname, old, new)
@@ -288,27 +284,25 @@ class MaslulGraphic:
 
             # total_monthly_sum = [kalatz_shp.shita.get_monthly_total()[0] + prime_shp.shita.get_monthly_total()[0] +
             #                      mish_shp.shita.get_monthly_total()[0]]
-            # source_total_monthly_sum.data = dict(x=[100], y=[100], text=total_monthly_sum)
+            total_monthly_sum = [0]
+            for m in masluls:
+                total_monthly_sum[0] += m.m_shp.shita.get_monthly_total()[0]
+            source_total_monthly_sum.data = dict(x=[100], y=[100], text=total_monthly_sum)
 
         self.m_sliders.update_on_change_callbaks(_update_data_handler)
 
-'''
-kltz_sliders = MaslusSliders(update_data_kltz)
-prime_sliders = MaslusSliders(update_data_prime)
-mish_sliders = MaslusSliders(update_data_mish)
-
-kltz_inputs = kltz_sliders.get_sliders()
-prime_inputs = prime_sliders.get_sliders()
-mish_inputs = mish_sliders.get_sliders()
-'''
 masluls = []
 maslul_id = 0
 def add_maslul_handler():
+    if masluls.__len__() > 10:
+        print("can not adding more then 20 masluls.")
+        return
     masluls.append(MaslulGraphic())
     m = masluls[-1]
     curdoc().add_root(column(m.m_sliders.get_sliders(), row(m.figures[0], m.figures[1], width=800)))
 
-add_maslul_button = Button(label="add maslul", button_type="success")
+add_maslul_button = Button(label="add maslul +", button_type="success")
 add_maslul_button.on_click(add_maslul_handler)
 
+curdoc().add_root(column(total_fig))
 curdoc().add_root(column(add_maslul_button))
